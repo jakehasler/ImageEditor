@@ -17,10 +17,12 @@ public class ImageEditor {
 	private static int height;
 	
 	private boolean embossed = false;
+	private boolean motionBlurred = false;
 	
 	private static Pixel[][] image;
 	
 	private static Pixel[][] embossedImage;
+	private static Pixel[][] blurredImage;
 
 	
 	public void readFile(String fileName) {
@@ -75,6 +77,7 @@ public class ImageEditor {
 		// Initialize to size of found height
 		image = new Pixel[width][height];
 		embossedImage = new Pixel[width][height];
+		blurredImage = new Pixel[width][height];
 		
 		
 		// Fill the image array with all the pixel values
@@ -114,6 +117,22 @@ public class ImageEditor {
 		}
 	}
 	
+	public String getBiggestDiff(int red, int green, int blue) {
+		String biggest = "";
+		
+		if(Math.abs(red) > Math.abs(green) && Math.abs(red) > Math.abs(blue)) {
+			biggest = "red";
+		}
+		else if(Math.abs(green) > Math.abs(red) && Math.abs(green) > Math.abs(blue)) {
+			biggest = "green";
+		}
+		else if(Math.abs(blue) > Math.abs(red) && Math.abs(blue) > Math.abs(green)) {
+			biggest = "blue";
+		}
+		
+		return biggest;
+	}
+	
 	
 	public void emboss() {
 		embossed = true;
@@ -123,27 +142,46 @@ public class ImageEditor {
 				if(x != 0 && y != 0) {
 					int redDiff = image[x][y].getRed() - image[x - 1][y - 1].getRed();
 					int greenDiff = image[x][y].getGreen() - image[x - 1][y - 1].getGreen();
-					int blueDiff = image[x][y].getBlue() - image[x - 1][y - 1].getBlue();
+					int blueDiff = image[x][y].getBlue() - image[x - 1][y - 1].getBlue(); 
 					
-					int maxDifference = Math.max(redDiff, Math.max(greenDiff, blueDiff));
+					int maxDifference = 0; 
+					
+					String biggestDiff = getBiggestDiff(redDiff, greenDiff, blueDiff);
+	
+					switch(biggestDiff) {
+						case "red":
+							maxDifference = redDiff;
+							break;
+						case "green":
+							maxDifference = greenDiff;
+							break;
+						case "blue":
+							maxDifference = blueDiff;
+							break;
+						default:
+							break;
+					}
 					
 					int v = 128 + maxDifference;
 					
 					if(v < 0) v = 0;
 					if(v > 255) v = 255;
 					
-					embossedImage[x][y] = new Pixel(v, v, v);
+					Pixel newPixel = new Pixel(v, v, v);
+					embossedImage[x][y] = newPixel;
 				}
 				else {
 					int defaultVal = 128;
-					embossedImage[x][y] = new Pixel(defaultVal, defaultVal, defaultVal);
+					Pixel newPixel = new Pixel(defaultVal, defaultVal, defaultVal);
+					embossedImage[x][y] = newPixel;
 				}
 				
 			}
 		}
 	}
 	
-	public void motionBlur() {
+	public void motionBlur(int blurAmount) {
+		motionBlurred = true;
 		
 	}
 	
@@ -180,11 +218,14 @@ public class ImageEditor {
 
 		for(int x = 0; x < width; x++) {
 			for(int y = 0; y < height; y++) {
-				if(!embossed) {
-					pw.println(image[x][y].print());
+				if(embossed) {
+					pw.println(embossedImage[x][y].print());
+				}
+				else if(motionBlurred) {
+					pw.println(blurredImage[x][y].print());
 				}
 				else {
-					pw.println(embossedImage[x][y].print());
+					pw.println(image[x][y].print());
 				}
 				//pw.println("hello");
 			}
@@ -192,6 +233,10 @@ public class ImageEditor {
 		
 		System.out.println("File \"" + outfileName + "\" has been saved.");
 		pw.close();
+	}
+	
+	public void printUsage() {
+		System.out.println("USAGE: java ImageEditor in-file out-file (grayscale|invert|emboss|motionblur motion-blur-length)");
 	}
 	
 	
@@ -204,9 +249,10 @@ public class ImageEditor {
 		
 		ImageEditor myEditor = new ImageEditor();
 		
-		String functionCall = args[2];
+		//String functionCall = args[2];
+		String functionCall = "emboss";
 		
-		System.out.println(functionCall);
+		System.out.println("Method called: " + functionCall);
 		
 		// Always need to use the 'new' keyword for instantiation of objects. 
 		Pixel test = new Pixel(24, 35, 24);
@@ -216,23 +262,32 @@ public class ImageEditor {
 		myEditor.readFile(args[0]);
 		
 		
+		// Run function from command line arg
 		switch(functionCall) {
-		case "grayscale": 
-			myEditor.grayscale(); 
-			break;
-		case "invert":
-			myEditor.invert(); 
-			break;
-		case "emboss":
-			myEditor.emboss(); 
-			break;
-		case "motionblur":
-			myEditor.motionBlur(); 
-			break;
-		default: break;
+			case "grayscale": 
+				myEditor.grayscale(); 
+				break;
+			case "invert":
+				myEditor.invert(); 
+				break;
+			case "emboss":
+				myEditor.emboss(); 
+				break;
+			case "motionblur":
+				if(args[3] != null) {
+					int blurAmount = Integer.parseInt(args[3]);
+					myEditor.motionBlur(blurAmount); 
+				}
+				else {
+					System.out.println("SORRY! Incorrect Function Option");
+					myEditor.printUsage();
+				}
+				break;
+			default: 
+				System.out.println("SORRY! Incorrect Function Option");
+				myEditor.printUsage();
+				break;
 		}
-		
-		myEditor.emboss();
 		
 		//myEditor.print();
 		

@@ -29,7 +29,7 @@ public class Pixel {
 		blue = newBlue;
 	}
 	
-	public void grayScale() {
+	public void grayscale() {
 		
 		int total = red + green + blue;
 		int average = total/3;
