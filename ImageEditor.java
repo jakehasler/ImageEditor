@@ -15,6 +15,7 @@ public class ImageEditor {
 	
 	private static int width;
 	private static int height;
+	private static int maxColor;
 	
 	private boolean embossed = false;
 	private boolean motionBlurred = false;
@@ -52,7 +53,7 @@ public class ImageEditor {
 		sc.useDelimiter("(\\s+)(#[^\\n]*\\n)?(\\s*)|(#[^\\n]*\\n)(\\s*)");
 		
 		int counter = 0;
-		while(counter < 4)
+		while(counter < 5)
 		{
 			++counter;
 			if(counter > 1) {
@@ -63,6 +64,8 @@ public class ImageEditor {
 					case 3: 
 						height = Integer.valueOf(sc.next());
 						break;
+					case 4:
+						maxColor = Integer.valueOf(sc.next());
 					default: break;
 				}
 			}
@@ -200,6 +203,9 @@ public class ImageEditor {
 	
 	public void writeFile(String outfileName) {
 		
+		
+		StringBuilder strBld = new StringBuilder();
+		
 		File outfile = new File("src/editor/" + outfileName);
 			
 		PrintWriter pw = null;
@@ -215,6 +221,7 @@ public class ImageEditor {
 		pw.println("# File Created by Jake Hasler");
 		pw.println(width);
 		pw.println(height);
+		pw.println(maxColor);
 
 		for(int x = 0; x < width; x++) {
 			for(int y = 0; y < height; y++) {
@@ -261,6 +268,9 @@ public class ImageEditor {
 		
 		myEditor.readFile(args[0]);
 		
+		// if args.length
+		//    if file.exists() || file.canRead()
+		// public static final <- constant in java
 		
 		// Run function from command line arg
 		switch(functionCall) {
