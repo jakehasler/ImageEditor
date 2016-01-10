@@ -35,7 +35,8 @@ public class ImageEditor {
 
 		System.out.println("File Name: " + fileName);
 
-		File file = new File("src/editor/" + fileName);
+		 //File file = new File("src/editor/" + fileName);
+		File file = new File("src/editor/" + "slctemple.ppm");
 		// How to print out the whole path
 		//System.out.println(file.getAbsolutePath());
 		
@@ -76,6 +77,7 @@ public class ImageEditor {
 		
 		System.out.println("Width: " + width);
 		System.out.println("Height: " + height);
+		System.out.println("Max Color: " + maxColor);
 		
 		// Initialize to size of found height
 		image = new Pixel[width][height];
@@ -85,6 +87,7 @@ public class ImageEditor {
 		
 		// Fill the image array with all the pixel values
 		fillImage(sc);
+	
 		
 	}
 	
@@ -93,6 +96,7 @@ public class ImageEditor {
 		// Filling the image with the pixel for each width.
 		for(int x = 0; x < width; x++) {
 			for(int y = 0; y < height; y++) {
+
 				int a = sc.nextInt();
 				int b = sc.nextInt();
 				int c = sc.nextInt();
@@ -120,62 +124,47 @@ public class ImageEditor {
 		}
 	}
 	
-	public String getBiggestDiff(int red, int green, int blue) {
-		String biggest = "";
-		
-		if(Math.abs(red) > Math.abs(green) && Math.abs(red) > Math.abs(blue)) {
-			biggest = "red";
-		}
-		else if(Math.abs(green) > Math.abs(red) && Math.abs(green) > Math.abs(blue)) {
-			biggest = "green";
-		}
-		else if(Math.abs(blue) > Math.abs(red) && Math.abs(blue) > Math.abs(green)) {
-			biggest = "blue";
-		}
-		
-		return biggest;
-	}
-	
 	
 	public void emboss() {
 		embossed = true;
 		for(int x = 0; x < width; x++) {
 			for(int y = 0; y < height; y++) {
 				
-				if(x != 0 && y != 0) {
+				if(x-1 < 0 || y-1 < 0) {
+					int defaultVal = 128;
+					Pixel newPixel = new Pixel(defaultVal, defaultVal, defaultVal);
+					embossedImage[x][y] = newPixel;
+				}
+				else {
 					int redDiff = image[x][y].getRed() - image[x - 1][y - 1].getRed();
 					int greenDiff = image[x][y].getGreen() - image[x - 1][y - 1].getGreen();
 					int blueDiff = image[x][y].getBlue() - image[x - 1][y - 1].getBlue(); 
 					
-					int maxDifference = 0; 
+					int maxDifference = 0;
 					
-					String biggestDiff = getBiggestDiff(redDiff, greenDiff, blueDiff);
-	
-					switch(biggestDiff) {
-						case "red":
-							maxDifference = redDiff;
-							break;
-						case "green":
-							maxDifference = greenDiff;
-							break;
-						case "blue":
-							maxDifference = blueDiff;
-							break;
-						default:
-							break;
+					int bigDiff = Math.max(Math.max(Math.abs(redDiff), Math.abs(greenDiff)), Math.abs(blueDiff));
+		
+					
+					if(bigDiff == Math.abs(redDiff)) {
+						maxDifference = redDiff;
+					}
+					else if(bigDiff == Math.abs(greenDiff)) {
+						maxDifference = greenDiff;
+					}
+					else if (bigDiff == Math.abs(blueDiff)) {
+						maxDifference = blueDiff;
 					}
 					
 					int v = 128 + maxDifference;
 					
-					if(v < 0) v = 0;
-					if(v > 255) v = 255;
+					if(v < 0) {
+						v = 0;
+					}
+					else if(v > 255) {
+						v = 255;
+					}
 					
 					Pixel newPixel = new Pixel(v, v, v);
-					embossedImage[x][y] = newPixel;
-				}
-				else {
-					int defaultVal = 128;
-					Pixel newPixel = new Pixel(defaultVal, defaultVal, defaultVal);
 					embossedImage[x][y] = newPixel;
 				}
 				
@@ -183,8 +172,45 @@ public class ImageEditor {
 		}
 	}
 	
-	public void motionBlur(int blurAmount) {
+	
+	public void motionBlur(int n) {
 		motionBlurred = true;
+		
+		for(int x = 0; x < width; x++) {
+			for(int y = 0; y < height; y++) {
+				
+				int lastPossiblePixel = y + n;
+				int endPixel;
+				
+				if(lastPossiblePixel >= width) {
+					endPixel = width;
+				}
+				else { 
+					endPixel = y + n - 1;
+				}
+				
+				int startPixel = y;
+				
+				int avgCount = endPixel - startPixel;
+				int sumRed = 0;
+				int sumGreen = 0;
+				int sumBlue = 0;
+				
+				for(int i = startPixel; i < endPixel; i++) {
+					sumRed += image[x][i].getRed();
+					sumGreen += image[x][i].getGreen();
+					sumBlue += image[x][i].getBlue();
+				}
+				
+				int finRed = sumRed/avgCount;
+				int finGreen = sumGreen/avgCount;
+				int finBlue = sumBlue/avgCount;
+				
+				blurredImage[x][y] = new Pixel(finRed, finGreen, finBlue);
+				
+			}
+		}
+		
 		
 	}
 	
@@ -194,9 +220,11 @@ public class ImageEditor {
 		
 		for(int x = 0; x < width; x++) {
 			for(int y = 0; y < height; y++) {
-				image[x][y].prettyPrint();
+			   System.out.println(image[x][y].print());	
+			   
 			}
 		}
+
 		
 	}
 	
@@ -234,7 +262,7 @@ public class ImageEditor {
 				else {
 					pw.println(image[x][y].print());
 				}
-				//pw.println("hello");
+
 			}
 		}
 		
@@ -272,6 +300,9 @@ public class ImageEditor {
 		//    if file.exists() || file.canRead()
 		// public static final <- constant in java
 		
+		//myEditor.print();
+		
+		
 		// Run function from command line arg
 		switch(functionCall) {
 			case "grayscale": 
@@ -299,7 +330,7 @@ public class ImageEditor {
 				break;
 		}
 		
-		//myEditor.print();
+		
 		
 		myEditor.writeFile(args[1]);
 
