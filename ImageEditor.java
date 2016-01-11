@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.Scanner;
 
 // IMAGE EDITOR
@@ -33,10 +34,11 @@ public class ImageEditor {
 		// fill 'image' with 'Pixels'
 		//   * Each Three Values per pixel
 
-		System.out.println("File Name: " + fileName);
+		//System.out.println("File Name: " + fileName);
 
-		 //File file = new File("src/editor/" + fileName);
-		File file = new File("src/editor/" + "slctemple.ppm");
+		File file = new File("src/editor/" + fileName);
+		// File file = new File(fileName);
+		//File file = new File("src/editor/" + "slctemple.ppm");
 		// How to print out the whole path
 		//System.out.println(file.getAbsolutePath());
 		
@@ -75,14 +77,14 @@ public class ImageEditor {
 			}
 		} // End initial while loop
 		
-		System.out.println("Width: " + width);
-		System.out.println("Height: " + height);
-		System.out.println("Max Color: " + maxColor);
+//		System.out.println("Width: " + width);
+//		System.out.println("Height: " + height);
+//		System.out.println("Max Color: " + maxColor);
 		
 		// Initialize to size of found height
-		image = new Pixel[width][height];
-		embossedImage = new Pixel[width][height];
-		blurredImage = new Pixel[width][height];
+		image = new Pixel[height][width];
+		embossedImage = new Pixel[height][width];
+		blurredImage = new Pixel[height][width];
 		
 		
 		// Fill the image array with all the pixel values
@@ -94,8 +96,8 @@ public class ImageEditor {
 	
 	public void fillImage(Scanner sc) {
 		// Filling the image with the pixel for each width.
-		for(int x = 0; x < width; x++) {
-			for(int y = 0; y < height; y++) {
+		for(int x = 0; x < height; x++) {
+			for(int y = 0; y < width; y++) {
 
 				int a = sc.nextInt();
 				int b = sc.nextInt();
@@ -109,16 +111,16 @@ public class ImageEditor {
 	
 	
 	public void grayscale() {
-		for(int x = 0; x < width; x++) {
-			for(int y = 0; y < height; y++) {
+		for(int x = 0; x < height; x++) {
+			for(int y = 0; y < width; y++) {
 				image[x][y].grayscale();
 			}
 		}
 	}
 	
 	public void invert() {
-		for(int x = 0; x < width; x++) {
-			for(int y = 0; y < height; y++) {
+		for(int x = 0; x < height; x++) {
+			for(int y = 0; y < width; y++) {
 				image[x][y].invert();
 			}
 		}
@@ -127,11 +129,12 @@ public class ImageEditor {
 	
 	public void emboss() {
 		embossed = true;
-		for(int x = 0; x < width; x++) {
-			for(int y = 0; y < height; y++) {
+		for(int x = 0; x < height; x++) {
+			for(int y = 0; y < width; y++) {
+				
+				int defaultVal = 128;
 				
 				if(x-1 < 0 || y-1 < 0) {
-					int defaultVal = 128;
 					Pixel newPixel = new Pixel(defaultVal, defaultVal, defaultVal);
 					embossedImage[x][y] = newPixel;
 				}
@@ -155,7 +158,7 @@ public class ImageEditor {
 						maxDifference = blueDiff;
 					}
 					
-					int v = 128 + maxDifference;
+					int v = defaultVal + maxDifference;
 					
 					if(v < 0) {
 						v = 0;
@@ -176,8 +179,11 @@ public class ImageEditor {
 	public void motionBlur(int n) {
 		motionBlurred = true;
 		
-		for(int x = 0; x < width; x++) {
-			for(int y = 0; y < height; y++) {
+		for(int x = 0; x < height; x++) {
+			for(int y = 0; y < width; y++) {
+				
+				int pixelsOnRight = Math.min(n - 1, width - y - 1);
+				Pixel[] valuesToRight = Arrays.copyOfRange(image[x], y + 1, y + pixelsOnRight + 1);
 				
 				int lastPossiblePixel = y + n;
 				int endPixel;
@@ -186,12 +192,13 @@ public class ImageEditor {
 					endPixel = width;
 				}
 				else { 
-					endPixel = y + n - 1;
+					endPixel = y + n;
 				}
 				
 				int startPixel = y;
 				
 				int avgCount = endPixel - startPixel;
+				if(endPixel == y) avgCount = width - x;
 				int sumRed = 0;
 				int sumGreen = 0;
 				int sumBlue = 0;
@@ -218,8 +225,8 @@ public class ImageEditor {
 	// Printing each Pixel
 	public void print() {
 		
-		for(int x = 0; x < width; x++) {
-			for(int y = 0; y < height; y++) {
+		for(int x = 0; x < height; x++) {
+			for(int y = 0; y < width; y++) {
 			   System.out.println(image[x][y].print());	
 			   
 			}
@@ -234,12 +241,13 @@ public class ImageEditor {
 		
 		StringBuilder strBld = new StringBuilder();
 		
-		File outfile = new File("src/editor/" + outfileName);
+		//File outfile = new File("src/editor/" + outfileName);
 			
 		PrintWriter pw = null;
 		
 		try {
 			pw = new PrintWriter("src/editor/" + outfileName);
+			//pw = new PrintWriter(outfileName);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -251,8 +259,8 @@ public class ImageEditor {
 		pw.println(height);
 		pw.println(maxColor);
 
-		for(int x = 0; x < width; x++) {
-			for(int y = 0; y < height; y++) {
+		for(int x = 0; x < height; x++) {
+			for(int y = 0; y < width; y++) {
 				if(embossed) {
 					pw.println(embossedImage[x][y].print());
 				}
@@ -266,7 +274,7 @@ public class ImageEditor {
 			}
 		}
 		
-		System.out.println("File \"" + outfileName + "\" has been saved.");
+		//System.out.println("File \"" + outfileName + "\" has been saved.");
 		pw.close();
 	}
 	
@@ -284,15 +292,15 @@ public class ImageEditor {
 		
 		ImageEditor myEditor = new ImageEditor();
 		
-		//String functionCall = args[2];
-		String functionCall = "emboss";
+		String functionCall = args[2];
+		//String functionCall = "motionblur";
 		
-		System.out.println("Method called: " + functionCall);
+		//System.out.println("Method called: " + functionCall);
 		
 		// Always need to use the 'new' keyword for instantiation of objects. 
 		Pixel test = new Pixel(24, 35, 24);
 		
-		test.prettyPrint();
+		//test.prettyPrint();
 		
 		myEditor.readFile(args[0]);
 		
@@ -334,8 +342,6 @@ public class ImageEditor {
 		
 		myEditor.writeFile(args[1]);
 
-		
-		
 		
     }
     
